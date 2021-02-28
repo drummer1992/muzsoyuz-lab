@@ -1,24 +1,27 @@
-import logo from './logo.svg';
+import React from "react"
 import './App.css';
+import createTheme from "./theme";
+import Chat from "./pages/Chat"
+
+import { useSelector } from "react-redux";
+import { ThemeProvider as MuiThemeProvider } from "@material-ui/core/styles";
+import { StylesProvider } from "@material-ui/styles";
+import { ThemeProvider } from "styled-components";
 
 function App() {
+  const theme = useSelector((state) => state.theme);
+  const muiTheme = createTheme(theme.currentTheme);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <React.Fragment>
+      <StylesProvider injectFirst>
+        <MuiThemeProvider theme={muiTheme}>
+          <ThemeProvider theme={muiTheme}>
+            <Chat/>
+          </ThemeProvider>
+        </MuiThemeProvider>
+      </StylesProvider>
+    </React.Fragment>
   );
 }
 
