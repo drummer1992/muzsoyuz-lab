@@ -22,8 +22,7 @@ import { spacing } from "@material-ui/system"
 import SendIcon from "@material-ui/icons/Send"
 import useChat from "./useChat"
 import { useDispatch, useSelector } from "react-redux"
-import { login, selectUser } from "../../redux/slice/user"
-import { findChatUsers, selectMusicians } from "../../redux/slice/all-users"
+import { fetchProfile, login, selectUser } from "../../redux/slice/user"
 import { Add } from "@material-ui/icons"
 
 const Divider = styled(MuiDivider)(spacing)
@@ -82,11 +81,11 @@ const ChatInput = styled(Grid)`
   padding: ${(props) => props.theme.spacing(5)}px;
 `
 
-const Online = styled(Badge)`
+const getStatusBadge = isActive => styled(Badge)`
   margin-right: ${(props) => props.theme.spacing(1)}px;
   span {
     background-color: ${(props) =>
-  props.theme.sidebar.footer.online.background};
+  props.theme.sidebar.footer[isActive ? 'online' : 'offline'].background};
     border: 1.5px solid ${(props) => props.theme.palette.common.white};
     height: 12px;
     width: 12px;
@@ -114,31 +113,44 @@ function ChatMessageComponent({
 function ChatWindow() {
   const dispatch = useDispatch()
 
-  const { status: authStatus, profile, token, error: authError } = useSelector(state => selectUser(state))
-  const { status: musiciansStatus, data: musicians, error: musiciansError } = useSelector(state => selectMusicians(state))
+  const { status: authStatus, profile, token, error: authError } = useSelector(selectUser)
 
-  const { messages, chat, sendMessage, createRoom, joinRoom } = useChat(token)
+  const {
+    currentConversation,
+    sendMessage,
+    createConversation,
+    changeConversation,
+    getConversations,
+  } = useChat(token)
 
   useEffect(() => {
     if (authStatus === 'idle') {
       dispatch(login({
         email   : prompt('Email'),
         password: prompt('Password'),
-      }))
+      })).then(() => {
+        dispatch(fetchProfile())
+      })
     }
-
-    if (musiciansStatus === 'idle' && token && token !== 'undefined') {
-      dispatch(findChatUsers({ token }))
-    }
-  })
+  }, [])
 
   const [chatInput, setChatInput] = useState('')
+  const [selectedConversation, setSelectedConversation] = useState(null)
 
   const handleMessageSend = () => {
+    if (!chatInput) {
+      return alert('Empty input')
+    }
+
+    if (!currentConversation?._id) {
+      return alert('No one conversation set')
+    }
+
     sendMessage({
-      message : chatInput,
-      senderId: profile.id,
+      text  : chatInput,
+      chatId: currentConversation._id,
     })
+
     setChatInput('')
   }
 
@@ -152,29 +164,20 @@ function ChatWindow() {
     return <h1>Error: {authError || "Unknown Error"}</h1>
   }
 
-  if (!musicians) {
+  if (profile?.status !== 'succeeded') {
     return <h1>Wait a minute</h1>
   }
 
   const handleCreateRoom = () => {
-    const userId = prompt('User Id')
-
-    createRoom([profile.id, userId], () => {
-      dispatch(findChatUsers({ token }))
-    })
-  }
-
-  const pickRoomId = users => {
-    const conversation = chat.find(conversation => {
-      return conversation.users.every(user => users.includes(user))
-    })
-
-    return conversation.roomId
+    createConversation(prompt('User Id'))
   }
 
   return (
     <ChatContainer container component={Card}>
       <ChatSidebar item xs={12} md={4} lg={3}>
+        <p style={{ marginLeft: 10 }}>
+          {`Hello ${profile?.email}`}
+        </p>
         <Grid item xs={12}>
           <Box p={2}>
             <Add style={{ cursor: 'pointer' }} onClick={handleCreateRoom}/>
@@ -183,12 +186,22 @@ function ChatWindow() {
         <Divider/>
         <List>
           {
-            (musicians || [])
-              .map(musician => {
+            getConversations()
+              .map((conversation, i) => {
+                const Status = getStatusBadge(conversation.user.isActive)
+
+                const onClick = () => {
+                  changeConversation(conversation._id)
+                  setSelectedConversation(i)
+                }
+
                 return (
-                  <ListItem button onClick={() => joinRoom(pickRoomId([profile.id, musician.id]))}>
+                  <ListItem
+                    selected={selectedConversation === i}
+                    key={`conversation-${i}`}
+                    button onClick={onClick}>
                     <ListItemIcon>
-                      <Online
+                      <Status
                         overlap="circle"
                         anchorOrigin={{
                           vertical  : "bottom",
@@ -197,14 +210,16 @@ function ChatWindow() {
                         variant="dot"
                       >
                         <Avatar
-                          alt={musician.name}
-                          src={musician.imageURL}
+                          alt={conversation.user.email}
+                          src={conversation.user.imageURL}
                         />
-                      </Online>
+                      </Status>
                     </ListItemIcon>
                     <ListItemText
-                      primary={musician.name || "Guest"}
-                      // secondary="Повідомлення під іменем"
+                      primary={conversation.user.email || "Guest"}
+                      secondary={
+                        !conversation.user.isActive
+                        && `Last seen: ${new Date(conversation.user.lastSeen).toLocaleTimeString()}`}
                     />
                   </ListItem>
                 )
@@ -215,12 +230,13 @@ function ChatWindow() {
       <ChatMain item xs={12} md={8} lg={9}>
         <ChatMessages>
           {
-            messages.map((message, i) => (
+            (currentConversation?.messages || []).map((message, i) => (
               <ChatMessageComponent
-                name={message.senderId === profile.id ? 'I' : message.senderId}
-                message={message.message}
-                time="now"
-                position={message.senderId === profile.id ? 'right' : 'left'}
+                key={`message-${i}`}
+                name={message.senderId === profile._id ? 'I' : message.senderId}
+                message={message.text}
+                time={new Date(message.createdAt).toLocaleTimeString()}
+                position={message.senderId === profile._id ? 'right' : 'left'}
               />
             ))
           }

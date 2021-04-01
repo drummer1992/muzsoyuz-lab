@@ -11,7 +11,7 @@ export class MuzSoyuzRequest extends Request {
   }
 
   static getUserProfile() {
-    return this.get('/user/profile')
+    return this.get('/user')
   }
 
   static getChatUsers() {
@@ -32,7 +32,7 @@ export class MuzSoyuzRequest extends Request {
   }
 
   static login(email, password) {
-    return this.makeAuthentication('login', { email, password })
+    return this.makeAuthentication('signIn', { email, password })
   }
 
   props(array) {

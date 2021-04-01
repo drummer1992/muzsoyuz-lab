@@ -62,6 +62,9 @@ const defaultVariant = {
       online: {
         background: green[500],
       },
+      offline: {
+        background: red[500],
+      },
     },
     badge: {
       color: "#FFF",

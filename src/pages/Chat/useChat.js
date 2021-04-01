@@ -1,107 +1,160 @@
-import io from "socket.io-client"
+import { io } from "socket.io-client"
 import { useEffect, useRef, useState } from 'react'
-
-const MESSAGE = 'chatMessage'
-const GET_CHAT = 'getChat'
-const GET_MESSAGES = 'getMessages'
-const CREATE_ROOM = 'createRoom'
-const JOIN_ROOM = 'joinRoom'
-const JOINED_ROOM = 'joinedRoom'
-const LEAVE_ROOM = 'leaveRoom'
-const LEFT_ROOM = 'leftRoom'
-const TYPING = 'typing'
-
-const GLOBAL_ROOM = 'global'
-
-// Повідомлення відправляються в одну й ту ж руму
+import e from "./events"
+import keyBy from 'lodash/keyBy'
+import cloneDeep from 'lodash/cloneDeep'
+import { useSelector } from "react-redux"
+import { selectUser } from "../../redux/slice/user"
 
 const useChat = token => {
-  const [chat, setChat] = useState([])
-  const [conversation, setConversation] = useState(null)
-  const [messages, setMessages] = useState([])
-  const socketRef = useRef()
+  const [currentConversation, setCurrentConversation] = useState(null)
+  const [conversationsMap, setConversationsMap] = useState({})
+
+  const { profile } = useSelector(state => selectUser(state))
 
   /**
-   * Creates a WebSocket connection
+   * @type {{ current: Socket }}
    */
+  const socketRef = useRef()
+
   useEffect(() => {
-    /**
-     * First of all we should fetch all conversations
-     *
-     * if !conversations.length
-     *    fetchConversations
-     *
-     * then ↓
-     */
+    socketRef.current = io('http://localhost:8000', { query: { token } })
 
-    socketRef.current = io('http://localhost:9000/api/v1/chat', { query: { token } })
+    socketRef.current.on(e.CONNECT, () => {
+      socketRef.current.emit(e.CONNECTED, fetchConversations)
+    })
 
-    socketRef.current.on('connect', () => {
-      socketRef.current.emit(GET_CHAT, chat => {
-        setChat(chat)
+    socketRef.current.on(e.CHAT_ERROR, error => alert(error.message))
+
+    socketRef.current.on(e.USER_ACTIVE, ({ _id: userId, isActive, lastSeen }) => {
+      console.log({ userId, isActive })
+
+      setConversationsMap(map => {
+        const cloned = cloneDeep(map)
+
+        for (const conversation of Object.values(cloned)) {
+          if (conversation.user._id === userId) {
+            conversation.user.isActive = isActive
+            conversation.user.lastSeen = lastSeen
+
+            break
+          }
+        }
+
+        return cloned
       })
     })
 
     /**
      * Listens for incoming messages
      */
-    socketRef.current.on(MESSAGE, message => {
-      setMessages(messages => [...messages, message])
-    })
+    socketRef.current.on(e.NEW_MESSAGE, addNewMessage)
 
-    socketRef.current.on(JOINED_ROOM, (client, body) => {
-      console.log(body)
-    })
-
-    socketRef.current.on(LEFT_ROOM, (client, body) => {
-      console.log(body)
+    socketRef.current.on(e.CREATED_CONVERSATION, ({ participantId, _id }) => {
+      if (participantId === profile._id) {
+        fetchConversation(_id)
+      }
     })
 
     return () => {
-      socketRef.current.emit(LEAVE_ROOM, GLOBAL_ROOM)
-
       socketRef.current.disconnect()
     }
-  }, [token])
+  }, [token, profile])
 
   const sendMessage = chatMessage => {
-    socketRef.current.emit(MESSAGE, {
-      message : chatMessage.message,
-      senderId: chatMessage.senderId,
-      chat    : {
-        id    : conversation.id,
-        roomId: conversation.roomId,
-      },
-    })
+    socketRef.current.emit(e.MESSAGE, chatMessage)
   }
 
-  const joinRoom = (roomId) => {
-    if (chat.length) {
-      socketRef.current.emit(JOIN_ROOM, roomId)
+  const changeConversation = (roomId) => {
+    const onResponse = messages => {
+      setConversationsMap(map => {
+        const nextMap = cloneDeep(map)
 
-      const conversation = chat.find(conversation => conversation.roomId === roomId)
+        nextMap[roomId].messages = messages
 
-      if (conversation) {
-        setConversation(conversation)
+        setCurrentConversation(nextMap[roomId])
 
-        socketRef.current.emit(GET_MESSAGES, roomId, setMessages)
+        return nextMap
+      })
+    }
+
+    socketRef.current.emit(e.GET_MESSAGES, roomId, onResponse)
+  }
+
+  const createConversation = userId => {
+    const onResponse = newConversation => {
+      setConversationsMap(map => {
+        const nextMap = cloneDeep(map)
+
+        nextMap[newConversation._id] = newConversation
+
+        changeConversation(newConversation._id)
+
+        return nextMap
+      })
+    }
+
+    socketRef.current.emit(e.CREATE_CONVERSATION, userId, onResponse)
+  }
+
+  const fetchConversations = () => {
+    const onResponse = conversations => {
+      setConversationsMap(keyBy(conversations, '_id'))
+
+      changeConversation(conversations[0]._id)
+    }
+
+    socketRef.current.emit(e.GET_CONVERSATIONS, onResponse)
+  }
+
+  const fetchConversation = id => {
+    const onResponse = conversation => {
+      setConversationsMap(map => {
+        const nextMap = cloneDeep(map)
+
+        nextMap[id] = conversation
+
+        return nextMap
+      })
+
+      if (!currentConversation) {
+        setCurrentConversation(conversation)
       }
     }
+
+    socketRef.current.emit(e.GET_CONVERSATION, id, onResponse)
   }
 
-  const createRoom = (users, callback) => {
-    socketRef.current.emit(CREATE_ROOM, users, roomId => {
-      joinRoom(roomId)
-      callback()
+  const addNewMessage = message => {
+    setConversationsMap(map => {
+      const nextMap = cloneDeep(map)
+
+      nextMap[message.chatId].messages = nextMap[message.chatId].messages || []
+      nextMap[message.chatId].messages.push(message)
+
+      setCurrentConversation(conversation => {
+        if (message.chatId !== conversation._id) {
+          return conversation
+        }
+
+        return nextMap[message.chatId]
+      })
+
+      return nextMap
     })
+  }
+
+  const getConversations = () => {
+    return Object.values(conversationsMap)
   }
 
   return {
-    messages,
-    chat,
+    currentConversation,
     sendMessage,
-    joinRoom,
-    createRoom,
+    changeConversation,
+    createConversation,
+    fetchConversations,
+    getConversations,
   }
 }
 
