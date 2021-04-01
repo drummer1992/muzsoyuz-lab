@@ -59,7 +59,7 @@ const useChat = token => {
     return () => {
       socketRef.current.disconnect()
     }
-  }, [token, profile])
+  }, [token])
 
   const sendMessage = chatMessage => {
     socketRef.current.emit(e.MESSAGE, chatMessage)

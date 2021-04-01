@@ -24,6 +24,7 @@ import useChat from "./useChat"
 import { useDispatch, useSelector } from "react-redux"
 import { fetchProfile, login, selectUser } from "../../redux/slice/user"
 import { Add } from "@material-ui/icons"
+import Button from "@material-ui/core/Button"
 
 const Divider = styled(MuiDivider)(spacing)
 
@@ -124,15 +125,17 @@ function ChatWindow() {
   } = useChat(token)
 
   useEffect(() => {
-    if (authStatus === 'idle') {
+    if (authStatus === 'idle' && !token) {
       dispatch(login({
         email   : prompt('Email'),
         password: prompt('Password'),
-      })).then(() => {
-        dispatch(fetchProfile())
-      })
+      }))
     }
-  }, [])
+
+    if (token &&  !['succeeded', 'loading', 'failed'].includes(profile?.status)) {
+      dispatch(fetchProfile())
+    }
+  }, [token, profile])
 
   const [chatInput, setChatInput] = useState('')
   const [selectedConversation, setSelectedConversation] = useState(null)
@@ -226,6 +229,15 @@ function ChatWindow() {
               })
           }
         </List>
+        <Box p={2}>
+          <Button
+            style={{ cursor: 'pointer', color: 'red' }} onClick={() => {
+            window.localStorage.clear()
+            window.location.reload()
+          }}>
+            Вийти нахуй з цього чату
+          </Button>
+        </Box>
       </ChatSidebar>
       <ChatMain item xs={12} md={8} lg={9}>
         <ChatMessages>
