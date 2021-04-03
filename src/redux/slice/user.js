@@ -60,6 +60,11 @@ const userSlice = createSlice({
         status: "failed",
         error : action.error && action.error.message
       }
+
+      if (action?.error?.message === 'Unauthorized') {
+        window.localStorage.clear()
+        window.location.reload()
+      }
     },
   },
 })

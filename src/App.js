@@ -1,7 +1,7 @@
 import React from "react"
 import './App.css';
 import createTheme from "./theme";
-import Chat from "./pages/Chat"
+import Chat from "./pages/Chat/Chat"
 
 import { useSelector } from "react-redux";
 import { ThemeProvider as MuiThemeProvider } from "@material-ui/core/styles";
