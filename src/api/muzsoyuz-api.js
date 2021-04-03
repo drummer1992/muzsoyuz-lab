@@ -14,21 +14,8 @@ export class MuzSoyuzRequest extends Request {
     return this.get('/user')
   }
 
-  static getChatUsers() {
-    return this.get('/chat/users')
-  }
-
   static makeAuthentication(route, body) {
     return this.post(`/auth/${route}`, body)
-  }
-
-  static getTokenAfterSocialOauth(provider, query) {
-    return this.get(`/auth/oauth/${provider}/callback/${query}`)
-  }
-
-
-  static register(email, password) {
-    return this.makeAuthentication('register', { email, password })
   }
 
   static login(email, password) {
