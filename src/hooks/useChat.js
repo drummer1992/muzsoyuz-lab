@@ -15,6 +15,8 @@ const useChat = token => {
 
   const { profile } = useSelector(selectUser)
 
+  token = profile?._id && token
+
   /**
    * @type {{ current: Socket }}
    */

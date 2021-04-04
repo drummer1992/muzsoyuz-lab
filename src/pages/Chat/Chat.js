@@ -23,6 +23,7 @@ import UsersList from "./UsersList"
 import ListItemIcon from "@material-ui/core/ListItemIcon"
 import ListItemText from "@material-ui/core/ListItemText"
 import ListItem from "@material-ui/core/ListItem"
+import Typography from "@material-ui/core/Typography"
 
 const Divider = styled(MuiDivider)(spacing)
 
@@ -31,8 +32,6 @@ const TextField = styled(MuiTextField)(spacing)
 const ChatSidebar = styled(Grid)`
   border-right: 1px solid ${(props) => props.theme.palette.divider};
 `
-
-const ChatMain = styled(Grid)``
 
 const ChatMessages = styled.div`
   overflow-y: scroll;
@@ -74,13 +73,24 @@ function ChatWindow() {
     }
   }, [profile, currentConversation])
 
+  const containerRef = React.useRef(null)
+
+  useEffect(() => {
+
+    if (containerRef && containerRef.current) {
+      const element = containerRef.current
+      element.scroll({
+        top     : element.scrollHeight,
+        left    : 0,
+        behavior: "smooth"
+      })
+    }
+
+  }, [containerRef, conversations])
+
   const handleMessageSend = () => {
     if (!chatInput) {
       return alert('Empty input')
-    }
-
-    if (!currentConversation?._id) {
-      return alert('No one conversation set')
     }
 
     sendMessage({
@@ -112,7 +122,7 @@ function ChatWindow() {
   }
 
   return (
-    <Grid container component={Card}>
+    <Grid container component={Card} style={{ height: '100vh' }}>
       <ChatSidebar item xs={12} md={4} lg={3}>
         <ListItem
           button
@@ -137,7 +147,6 @@ function ChatWindow() {
             />
           </Box>
         </Grid>
-        <Divider/>
         <List>
           {
             conversations.map((item, i) => (
@@ -155,43 +164,55 @@ function ChatWindow() {
           }
         </List>
       </ChatSidebar>
-      <ChatMain item xs={12} md={8} lg={9}>
-        <ChatMessages>
-          {(currentConversation?.messages || []).map(
-            ({ senderId, text, viewed, createdAt }, i) => (
-              <Message
-                key={`message-${i}`}
-                name={senderId === profile._id ? 'I' : senderId}
-                message={text}
-                viewed={viewed}
-                time={new Date(createdAt).toLocaleTimeString()}
-                position={senderId === profile._id ? 'right' : 'left'}
-              />
-            )
-          )}
-        </ChatMessages>
-        <Divider/>
-        <ChatInput container>
-          <Grid item style={{ flexGrow: 1 }}>
-            <TextField
-              autoFocus={true}
-              onChange={handleTyping}
-              onKeyUp={handleEnterPress}
-              value={chatInput}
-              variant="outlined"
-              label="Type your message"
-              fullWidth
-            />
+      {
+        currentConversation
+        ? (
+          <Grid item xs={12} md={8} lg={9}>
+            <ChatMessages ref={containerRef}>
+              {(currentConversation.messages).map(
+                ({ senderId, text, viewed, createdAt }, i) => (
+                  <Message
+                    key={`message-${i}`}
+                    name={senderId === profile._id ? 'I' : senderId}
+                    message={text}
+                    viewed={viewed}
+                    time={new Date(createdAt).toLocaleTimeString()}
+                    position={senderId === profile._id ? 'right' : 'left'}
+                  />
+                )
+              )}
+            </ChatMessages>
+            <Divider/>
+            <ChatInput container>
+              <Grid item style={{ flexGrow: 1 }}>
+                <TextField
+                  autoFocus={true}
+                  onChange={handleTyping}
+                  onKeyUp={handleEnterPress}
+                  value={chatInput}
+                  variant="outlined"
+                  label="Type your message"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item>
+                <Box ml={2}>
+                  <Fab color="primary" aria-label="add" size="medium">
+                    <SendIcon onClick={handleMessageSend}/>
+                  </Fab>
+                </Box>
+              </Grid>
+            </ChatInput>
           </Grid>
-          <Grid item>
-            <Box ml={2}>
-              <Fab color="primary" aria-label="add" size="medium">
-                <SendIcon onClick={handleMessageSend}/>
-              </Fab>
-            </Box>
-          </Grid>
-        </ChatInput>
-      </ChatMain>
+        )
+        : (
+            <Grid xs={12} md={8} lg={9} container justify="center" style={{ margin: 'auto' }}>
+              <Typography>
+                Select a chat to start messaging
+              </Typography>
+            </Grid>
+          )
+      }
     </Grid>
   )
 }
