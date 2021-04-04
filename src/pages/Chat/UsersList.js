@@ -56,8 +56,9 @@ export default function UsersList({ users, onClick }) {
       >
         <List component="div" disablePadding>
           {
-            (users || []).map(user => (
+            (users || []).map((user, i) => (
               <ListItem
+                key={`user-${i}`}
                 button
                 onClick={onClick(user._id)}
                 className={classes.nested}

@@ -112,7 +112,7 @@ function ChatWindow() {
   }
 
   const handleTyping = e => {
-    currentConversation && setTyping(currentConversation._id)
+    setTyping(currentConversation._id)
 
     setChatInput(e.target.value)
   }
@@ -140,7 +140,7 @@ function ChatWindow() {
               onClick={handleCreateRoom}
               users={users}
             />
-            <Divider/>
+            {conversations.length ? <Divider/> : null}
           </Box>
         </Grid>
         <List>
@@ -182,7 +182,7 @@ function ChatWindow() {
               <ChatInput container>
                 <Grid item style={{ flexGrow: 1 }}>
                   <TextField
-                    autoFocus={true}
+                    autoFocus={false}
                     onChange={handleTyping}
                     onKeyUp={handleEnterPress}
                     value={chatInput}
@@ -202,7 +202,7 @@ function ChatWindow() {
             </Grid>
           )
           : (
-            <Grid xs={12} md={8} lg={9} container justify="center" style={{ margin: 'auto' }}>
+            <Grid container justify="center" style={{ margin: 'auto' }}>
               <Typography>
                 Select a chat to start messaging
               </Typography>

@@ -35,6 +35,8 @@ export const authenticateAfterOauth = createAsyncThunk(
     const response = await MuzSoyuzRequest.getTokenAfterSocialOauth(provider, query)
 
     thunkAPI.dispatch(finalizeOAuthLogin(response))
+
+    return response
   }
 )
 
