@@ -46,7 +46,7 @@ export default function Conversation({ conversation, onClick, profile, selected 
     return null
   }
 
-  const { name, email } = conversation
+  const { name, email } = conversation.user
 
   return (
     <ListItem
