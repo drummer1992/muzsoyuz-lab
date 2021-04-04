@@ -55,7 +55,7 @@ const useChat = token => {
 
           return nextMap
         })
-      }, SECOND)
+      }, SECOND * 2)
     })
 
     socketRef.current.on(e.CHAT_ERROR, error => alert(error.message))
