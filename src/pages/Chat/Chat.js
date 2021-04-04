@@ -7,7 +7,7 @@ import {
   TextField as MuiTextField,
   List,
   Fab,
-  Divider as MuiDivider,
+  Divider as MuiDivider, Avatar,
 } from "@material-ui/core"
 
 import { spacing } from "@material-ui/system"
@@ -20,15 +20,13 @@ import Button from "@material-ui/core/Button"
 import Conversation from "./Conversation"
 import Message from "./Message"
 import UsersList from "./UsersList"
+import ListItemIcon from "@material-ui/core/ListItemIcon"
+import ListItemText from "@material-ui/core/ListItemText"
+import ListItem from "@material-ui/core/ListItem"
 
 const Divider = styled(MuiDivider)(spacing)
 
 const TextField = styled(MuiTextField)(spacing)
-
-const ChatContainer = styled(Grid)`
-  width: 100%;
-  height: 100vh;
-`
 
 const ChatSidebar = styled(Grid)`
   border-right: 1px solid ${(props) => props.theme.palette.divider};
@@ -125,11 +123,23 @@ function ChatWindow() {
   }
 
   return (
-    <ChatContainer container component={Card}>
+    <Grid container component={Card}>
       <ChatSidebar item xs={12} md={4} lg={3}>
-        <p style={{ marginLeft: 10 }}>
-          {`Hello ${profile?.email}`}
-        </p>
+        <ListItem
+          button
+        >
+          <ListItemIcon>
+            <Avatar
+              alt={profile?.email}
+              src={profile?.imageURL}
+            />
+          </ListItemIcon>
+          <ListItemText primary={profile?.email}/>
+          <Button
+            style={{ cursor: 'pointer', color: 'red' }} onClick={logout}>
+            Logout
+          </Button>
+        </ListItem>
         <Grid item xs={12}>
           <Box p={2}>
             <UsersList
@@ -155,12 +165,6 @@ function ChatWindow() {
             ))
           }
         </List>
-        <Box p={2}>
-          <Button
-            style={{ cursor: 'pointer', color: 'red' }} onClick={logout}>
-            Logout
-          </Button>
-        </Box>
       </ChatSidebar>
       <ChatMain item xs={12} md={8} lg={9}>
         <ChatMessages>
@@ -199,7 +203,7 @@ function ChatWindow() {
           </Grid>
         </ChatInput>
       </ChatMain>
-    </ChatContainer>
+    </Grid>
   )
 }
 
