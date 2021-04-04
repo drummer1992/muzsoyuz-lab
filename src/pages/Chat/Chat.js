@@ -119,11 +119,11 @@ function ChatWindow() {
         >
           <ListItemIcon>
             <Avatar
-              alt={profile?.email}
+              alt={profile?.name || profile?.email}
               src={profile?.imageURL}
             />
           </ListItemIcon>
-          <ListItemText primary={profile?.email}/>
+          <ListItemText primary={profile?.name || profile?.email}/>
           <Button
             style={{ cursor: 'pointer', color: 'red' }} onClick={logout}>
             Logout

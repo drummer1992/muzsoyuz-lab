@@ -109,7 +109,9 @@ const useChat = token => {
     setConversationsMap(map => {
       setCurrentConversation(map[roomId])
 
-      const hasUnViewed = map[roomId].messages.some(m => m.senderId !== profile._id)
+      const hasUnViewed = map[roomId].messages.some(m => {
+        return !m.viewed && m.senderId !== profile._id
+      })
 
       hasUnViewed && socketRef.current.emit(e.SET_VIEWED, roomId)
 

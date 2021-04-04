@@ -46,6 +46,8 @@ export default function Conversation({ conversation, onClick, profile, selected 
     return null
   }
 
+  const { name, email } = conversation
+
   return (
     <ListItem
       selected={selected}
@@ -61,14 +63,14 @@ export default function Conversation({ conversation, onClick, profile, selected 
           variant="dot"
         >
           <Avatar
-            alt={conversation.user.email}
+            alt={name || email}
             src={conversation.user.imageURL}
           />
         </Status>
       </ListItemIcon>
       <ListItemText
         style={{ overflow: 'hidden' }}
-        primary={conversation.user.email || "Guest"}
+        primary={name || email || "Guest"}
         secondary={
           !conversation.user.isActive
           && `Last seen: ${new Date(conversation.user.lastSeen).toLocaleTimeString()}`}
