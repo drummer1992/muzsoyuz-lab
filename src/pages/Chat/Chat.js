@@ -122,7 +122,7 @@ function ChatWindow() {
   }
 
   return (
-    <Grid container component={Card} style={{ height: '100vh' }}>
+    <Grid container component={Card}>
       <ChatSidebar item xs={12} md={4} lg={3}>
         <ListItem
           button
