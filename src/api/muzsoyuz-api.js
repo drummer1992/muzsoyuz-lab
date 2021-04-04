@@ -4,18 +4,22 @@ import {config} from "../config"
 export class MuzSoyuzRequest extends Request {
   setToken(token) {
     this.setHeaders({
-      Authorization: `Bearer ${token}`,
+      authorization: `Bearer ${token}`,
     })
 
     return this
   }
 
-  static getUserProfile() {
-    return this.get('/user')
+  static getUserProfile(token) {
+    return this.get('/user').setToken(token)
   }
 
   static makeAuthentication(route, body) {
     return this.post(`/auth/${route}`, body)
+  }
+
+  static getTokenAfterSocialOauth(provider, query) {
+    return this.get(`/oauth/${provider}/callback${query}`)
   }
 
   static login(email, password) {

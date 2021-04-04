@@ -24,15 +24,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export default function UsersList({ fetchUsers, onClick }) {
+export default function UsersList({ users, onClick }) {
   const classes = useStyles()
   const [open, setOpen] = React.useState(false)
-  const [users, setUsers] = React.useState(null)
 
   useEffect(() => {
-    if (!users) {
-      fetchUsers(users => setUsers(users))
-    }
+
   }, [users, open])
 
   const handleClick = () => {

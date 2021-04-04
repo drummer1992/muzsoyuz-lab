@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
 import { MuzSoyuzRequest } from "../../api/muzsoyuz-api"
+import history from "../../history"
 
-const AUTH_TOKEN_KEY = "Authorization"
+export const AUTH_TOKEN_KEY = "Authorization"
 
 const initialState = {
   profile: null,
@@ -18,9 +19,27 @@ export const login = createAsyncThunk("post/login", async (data) => {
   return response
 })
 
-export const fetchProfile = createAsyncThunk("get/profile", () => {
-  return MuzSoyuzRequest.getUserProfile()
-    .setToken(window.localStorage.getItem(AUTH_TOKEN_KEY))
+const navigateToChat = () => () => {
+  history.push('/chat')
+}
+
+const finalizeOAuthLogin = response => dispatch => {
+  dispatch({ ...login.fulfilled, payload: response })
+
+  dispatch(navigateToChat())
+}
+
+export const authenticateAfterOauth = createAsyncThunk(
+  'post/oauth/login',
+  async ({ provider, query }, thunkAPI) => {
+    const response = await MuzSoyuzRequest.getTokenAfterSocialOauth(provider, query)
+
+    thunkAPI.dispatch(finalizeOAuthLogin(response))
+  }
+)
+
+export const fetchProfile = createAsyncThunk("get/profile", token => {
+  return MuzSoyuzRequest.getUserProfile(token)
 })
 
 const userSlice = createSlice({

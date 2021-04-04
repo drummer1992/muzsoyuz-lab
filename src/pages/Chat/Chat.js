@@ -15,7 +15,7 @@ import styled from "styled-components/macro"
 import SendIcon from "@material-ui/icons/Send"
 import useChat from "../../hooks/useChat"
 import { useDispatch, useSelector } from "react-redux"
-import { fetchProfile, login, selectUser } from "../../redux/slice/user"
+import { fetchProfile, selectUser } from "../../redux/slice/user"
 import Button from "@material-ui/core/Button"
 import Conversation from "./Conversation"
 import Message from "./Message"
@@ -61,7 +61,7 @@ function ChatWindow() {
     changeConversation,
     getConversations,
     setTyping,
-    fetchUsers,
+    users,
   } = useChat(token)
 
   const [chatInput, setChatInput] = useState('')
@@ -69,17 +69,10 @@ function ChatWindow() {
   const conversations = getConversations()
 
   useEffect(() => {
-    if (authStatus === 'idle' && !token) {
-      dispatch(login({
-        email   : prompt('Email'),
-        password: prompt('Password'),
-      }))
+    if (!profile?.status) {
+      dispatch(fetchProfile(token))
     }
-
-    if (token && !profile?.status) {
-      dispatch(fetchProfile())
-    }
-  }, [token, profile, currentConversation])
+  }, [profile, currentConversation])
 
   const handleMessageSend = () => {
     if (!chatInput) {
@@ -106,10 +99,6 @@ function ChatWindow() {
 
   if (authStatus !== 'idle' && (!profile || !token || authError)) {
     return <h1>Error: {authError || "Unknown Error"}</h1>
-  }
-
-  if (profile?.status !== 'succeeded') {
-    return <h1>Wait a minute</h1>
   }
 
   const handleCreateRoom = userId => () => {
@@ -144,7 +133,7 @@ function ChatWindow() {
           <Box p={2}>
             <UsersList
               onClick={handleCreateRoom}
-              fetchUsers={fetchUsers}
+              users={users}
             />
           </Box>
         </Grid>

@@ -11,10 +11,9 @@ const SECOND = 1000
 const useChat = token => {
   const [currentConversation, setCurrentConversation] = useState(null)
   const [conversationsMap, setConversationsMap] = useState({})
+  const [users, setUsers] = useState([])
 
   const { profile } = useSelector(selectUser)
-
-  token = profile?._id && token
 
   /**
    * @type {{ current: Socket }}
@@ -126,6 +125,10 @@ const useChat = token => {
     socketRef.current.emit(e.GET_CONVERSATIONS, conversations => {
       setConversationsMap(keyBy(conversations, '_id'))
     })
+
+    socketRef.current.emit(e.GET_USERS, users => {
+      setUsers(users.filter(user => user.facebookId && user._id !== profile._id))
+    })
   }
 
   const fetchConversation = id => {
@@ -176,17 +179,13 @@ const useChat = token => {
     socketRef.current.emit(e.TYPING_START, chatId)
   }
 
-  const fetchUsers = cb => {
-    socketRef.current.emit(e.GET_USERS, cb)
-  }
-
   return {
     currentConversation,
+    users,
     sendMessage,
     changeConversation,
     createConversation,
     fetchConversations,
-    fetchUsers,
     getConversations,
     setTyping,
   }
