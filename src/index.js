@@ -22,7 +22,7 @@ const Routing = () => {
       <Switch>
         <Route
           exact
-          path="/chat"
+          path="/"
           component={() => {
             if (token) {
               return <App/>
