@@ -20,7 +20,7 @@ export const login = createAsyncThunk("post/login", async (data) => {
 })
 
 const navigateToChat = () => () => {
-  history.push('/chat')
+  history.push('/')
 }
 
 const finalizeOAuthLogin = response => dispatch => {
