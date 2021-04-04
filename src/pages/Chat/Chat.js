@@ -182,6 +182,7 @@ function ChatWindow() {
               <ChatInput container>
                 <Grid item style={{ flexGrow: 1 }}>
                   <TextField
+                    style={{ fontSize: 16 }}
                     autoFocus={false}
                     onChange={handleTyping}
                     onKeyUp={handleEnterPress}

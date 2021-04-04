@@ -1,10 +1,11 @@
 import { io } from "socket.io-client"
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import e from "../constants"
 import keyBy from 'lodash/keyBy'
 import cloneDeep from 'lodash/cloneDeep'
 import { useSelector } from "react-redux"
 import { selectUser } from "../redux/slice/user"
+import debounce from "../utils/debounce"
 
 const SECOND = 1000
 
@@ -179,9 +180,12 @@ const useChat = token => {
     return Object.values(conversationsMap)
   }
 
-  const setTyping = chatId => {
-    socketRef.current.emit(e.TYPING_START, chatId)
-  }
+  const setTyping = useCallback(
+    debounce(chatId => {
+      socketRef.current.emit(e.TYPING_START, chatId)
+    }, SECOND),
+    []
+  )
 
   return {
     currentConversation,
