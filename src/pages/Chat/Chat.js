@@ -158,57 +158,59 @@ function ChatWindow() {
               />
             ))
           }
+          {
+            !currentConversation
+            && (
+              <ListItem>
+                <Typography>
+                  Select a chat to start messaging
+                </Typography>
+              </ListItem>
+            )
+          }
         </List>
         <Divider/>
       </ChatSidebar>
       {
-        currentConversation
-          ? (
-            <Grid item xs={12} md={8} lg={9}>
-              <ChatMessages ref={containerRef}>
-                {(currentConversation.messages).map(
-                  ({ senderId, text, viewed, createdAt }, i) => (
-                    <Message
-                      key={`message-${i}`}
-                      name={senderId === profile._id ? 'I' : senderId}
-                      message={text}
-                      viewed={viewed}
-                      time={new Date(createdAt).toLocaleTimeString()}
-                      position={senderId === profile._id ? 'right' : 'left'}
-                    />
-                  )
-                )}
-              </ChatMessages>
-              <ChatInput container>
-                <Grid item style={{ flexGrow: 1 }}>
-                  <TextField
-                    style={{ fontSize: 16 }}
-                    autoFocus={false}
-                    onChange={handleTyping}
-                    onKeyUp={handleEnterPress}
-                    value={chatInput}
-                    variant="outlined"
-                    label="Type your message"
-                    fullWidth
+        currentConversation && (
+          <Grid item xs={12} md={8} lg={9}>
+            <ChatMessages ref={containerRef}>
+              {(currentConversation.messages).map(
+                ({ senderId, text, viewed, createdAt }, i) => (
+                  <Message
+                    key={`message-${i}`}
+                    name={senderId === profile._id ? 'I' : senderId}
+                    message={text}
+                    viewed={viewed}
+                    time={new Date(createdAt).toLocaleTimeString()}
+                    position={senderId === profile._id ? 'right' : 'left'}
                   />
-                </Grid>
-                <Grid item>
-                  <Box ml={2}>
-                    <Fab color="primary" aria-label="add" size="medium">
-                      <SendIcon onClick={handleMessageSend}/>
-                    </Fab>
-                  </Box>
-                </Grid>
-              </ChatInput>
-            </Grid>
-          )
-          : (
-            <Grid container justify="center" style={{ margin: 'auto' }}>
-              <Typography>
-                Select a chat to start messaging
-              </Typography>
-            </Grid>
-          )
+                )
+              )}
+            </ChatMessages>
+            <ChatInput container>
+              <Grid item style={{ flexGrow: 1 }}>
+                <TextField
+                  style={{ fontSize: 16 }}
+                  autoFocus={false}
+                  onChange={handleTyping}
+                  onKeyUp={handleEnterPress}
+                  value={chatInput}
+                  variant="outlined"
+                  label="Type your message"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item>
+                <Box ml={2}>
+                  <Fab color="primary" aria-label="add" size="medium">
+                    <SendIcon onClick={handleMessageSend}/>
+                  </Fab>
+                </Box>
+              </Grid>
+            </ChatInput>
+          </Grid>
+        )
       }
     </Grid>
   )
